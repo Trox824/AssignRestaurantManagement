@@ -59,6 +59,18 @@ export const OrderProvider = ({ children }) => {
     });
   };
 
+  const UploadOrderHistoryToDatabase = () => {
+    // Placeholder function to simulate fetching order history from a database
+    console.log("Fetching order history from the database...");
+    // Implement your database fetch logic here
+  };
+
+  const fetchOrderHistoryFromDatabase = () => {
+    // Placeholder function to simulate fetching order history from a database
+    console.log("Fetching order history from the database...");
+    // Implement your database fetch logic here
+  };
+
   const placeOrder = () => {
     const subtotal = orders.reduce(
       (acc, order) => acc + order.price * order.quantity,
@@ -76,7 +88,10 @@ export const OrderProvider = ({ children }) => {
       orders: [...orders],
     };
 
-    setOrderHistory((prevHistory) => [...prevHistory, newOrder]);
+    // Simulate fetching order history from the database
+    UploadOrderHistoryToDatabase();
+    fetchOrderHistoryFromDatabase();
+    // Clear current orders
     setOrders([]);
   };
 

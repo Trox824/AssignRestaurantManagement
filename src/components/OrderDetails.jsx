@@ -8,13 +8,16 @@ import { useOrderContext } from "./OrderContext";
 const OrderDetails = ({ onPlaceOrder }) => {
   const { orders, removeFromOrder, placeOrder } = useOrderContext();
 
+  // const SendOrderDB = () => {
+  //   return "dmm"
+  // }
   const subtotal = orders.reduce(
     (acc, order) => acc + order.price * order.quantity,
     0
   );
   const tax = subtotal * 0.1;
   const total = subtotal + tax;
-
+  console.log(onPlaceOrder);
   return (
     <div className="bg-white p-2 rounded-md w-full">
       <h2 className="text-xl font-semibold mb-4">Order ID</h2>
