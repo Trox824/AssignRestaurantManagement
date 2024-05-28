@@ -7,15 +7,11 @@ import {
   Button,
 } from "@nextui-org/react";
 
-export default function OrderDropdown() {
-  const [selectedKeys, setSelectedKeys] = React.useState(
-    new Set(["Please Select Type"])
-  );
-
-  const selectedValue = React.useMemo(
-    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
-    [selectedKeys]
-  );
+export default function OrderDropdown({
+  selectedOrderType,
+  setSelectedOrderType,
+}) {
+  const selectedValue = selectedOrderType || "Please Select Type";
 
   return (
     <Dropdown>
@@ -29,8 +25,8 @@ export default function OrderDropdown() {
         variant="flat"
         disallowEmptySelection
         selectionMode="single"
-        selectedKeys={selectedKeys}
-        onSelectionChange={setSelectedKeys}
+        selectedKeys={new Set([selectedOrderType])}
+        onSelectionChange={(keys) => setSelectedOrderType(Array.from(keys)[0])}
       >
         <DropdownItem key="Dine In">Dine In</DropdownItem>
         <DropdownItem key="Take Away">Take Away</DropdownItem>

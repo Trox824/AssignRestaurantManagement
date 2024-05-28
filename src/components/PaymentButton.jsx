@@ -10,9 +10,28 @@ import { RadioGroup, Radio } from "@nextui-org/radio";
 
 export default function PaymentButton() {
   const [paymentMethod, setPaymentMethod] = useState("Card");
+  const [amount, setAmount] = useState("");
+  const [error, setError] = useState("");
 
   const handlePaymentMethodChange = (value) => {
     setPaymentMethod(value);
+    setAmount("");
+    setError("");
+  };
+
+  const handleProcessPayment = () => {
+    if (paymentMethod === "Cash" && !amount) {
+      setError("Amount is required for cash payments.");
+      return;
+    }
+    setError("");
+    // Process the payment
+    console.log(
+      "Payment processed with method:",
+      paymentMethod,
+      "Amount:",
+      amount
+    );
   };
 
   return (
@@ -35,15 +54,21 @@ export default function PaymentButton() {
                 <Radio value="Card">Card</Radio>
                 <Radio value="Cash">Cash</Radio>
               </RadioGroup>
-              {paymentMethod === "Cash" ? (
-                <Input type="Amount" label="Amount" />
-              ) : (
-                <></>
+              {paymentMethod === "Cash" && (
+                <Input
+                  type="text"
+                  label="Amount"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  isInvalid={!!error}
+                  errorMessage={error}
+                />
               )}
             </div>
             <Button
               color="primary"
               className="mt-4 w-full bg-blue-500 text-white p-2 rounded-md"
+              onClick={handleProcessPayment}
             >
               Process Payment
             </Button>
