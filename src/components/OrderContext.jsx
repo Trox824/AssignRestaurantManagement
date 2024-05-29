@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
+import axios from "axios";
+import {API_URL} from "../constants/index.jsx";
 
 // Create a context
 const OrderContext = createContext();
@@ -25,11 +27,13 @@ export const OrderProvider = ({ children }) => {
 
   const [orders, setOrders] = useState([]);
   const [orderHistory, setOrderHistory] = useState([]);
+  const [menuItemIds, setMenuItemIds] = useState([]);
 
   const addToOrder = (item) => {
+    setMenuItemIds([...menuItemIds, item?.id]);
     setOrders((prevOrders) => {
       const existingOrderIndex = prevOrders.findIndex(
-        (order) => order.name === item.name
+        (order) => order.id === item.id
       );
       if (existingOrderIndex !== -1) {
         const updatedOrders = [...prevOrders];
@@ -59,19 +63,28 @@ export const OrderProvider = ({ children }) => {
     });
   };
 
-  const UploadOrderHistoryToDatabase = () => {
+  const saveOrderIntoDatabase = (params) => {
     // Placeholder function to simulate fetching order history from a database
     console.log("Fetching order history from the database...");
     // Implement your database fetch logic here
+    axios.post(`${API_URL}/order`, params)
+        .then(() => {
+          setOrders([]);
+        }).catch(er => console.error(er.message));
   };
 
   const fetchOrderHistoryFromDatabase = () => {
     // Placeholder function to simulate fetching order history from a database
     console.log("Fetching order history from the database...");
     // Implement your database fetch logic here
+    axios.get(`${API_URL}/order?status=UNPAID`)
+        .then(res => {
+          const unpaidOrders = res.data?.data;
+          setOrderHistory(unpaidOrders);
+        }).catch(er => console.error(er.message));
   };
 
-  const placeOrder = () => {
+  const placeOrder = ({ specialInstruction, tableNumber, customer, orderType }) => {
     const subtotal = orders.reduce(
       (acc, order) => acc + order.price * order.quantity,
       0
@@ -87,9 +100,19 @@ export const OrderProvider = ({ children }) => {
       viewInvoice: "View Invoice",
       orders: [...orders],
     };
-
+    const menuItemIds = [];
+    // Iterate over each item
+    orders.forEach(item => {
+      // Insert the item's id into the list based on its quantity
+      for (let i = 0; i < item.quantity; i++) {
+        menuItemIds.push(item.id);
+      }
+    });
+    const params = {
+      menuItemIds, tableNumber, customer, orderType, specialInstruction
+    }
     // Simulate fetching order history from the database
-    UploadOrderHistoryToDatabase();
+    saveOrderIntoDatabase(params);
     fetchOrderHistoryFromDatabase();
     // Clear current orders
     setOrders([]);
@@ -104,6 +127,7 @@ export const OrderProvider = ({ children }) => {
         addToOrder,
         removeFromOrder,
         placeOrder,
+        menuItemIds,
       }}
     >
       {children}

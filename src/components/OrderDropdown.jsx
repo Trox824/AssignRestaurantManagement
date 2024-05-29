@@ -28,9 +28,9 @@ export default function OrderDropdown({
         selectedKeys={new Set([selectedOrderType])}
         onSelectionChange={(keys) => setSelectedOrderType(Array.from(keys)[0])}
       >
-        <DropdownItem key="Dine In">Dine In</DropdownItem>
-        <DropdownItem key="Take Away">Take Away</DropdownItem>
-        <DropdownItem key="Deliver">Deliver</DropdownItem>
+        <DropdownItem key="NORMAL">Dine In</DropdownItem>
+        {/*<DropdownItem key="Take Away">Take Away</DropdownItem>*/}
+        <DropdownItem key="DELIVERY">Deliver</DropdownItem>
       </DropdownMenu>
     </Dropdown>
   );

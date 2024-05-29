@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import MenuItem from "../components/MenuItem";
 import OrderDetails from "../components/OrderDetails";
 import image1 from "../assets/image1.jpg";
@@ -13,6 +13,7 @@ import {
   Input,
   useDisclosure,
 } from "@nextui-org/react";
+import {useAddMenuItem, useDeleteMenuItem, useGetMenuItems, useUpdateMenuItem} from "../hooks/menu/index.jsx";
 
 const initialMenuItems = [
   { id: 1, name: "Lemon Chicken", price: 10.0, image: image1 },
@@ -27,22 +28,34 @@ const initialMenuItems = [
 ];
 
 const Menu = () => {
-  const [menuItems, setMenuItems] = useState(initialMenuItems);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [editMode, setEditMode] = useState(false);
   const [currentItem, setCurrentItem] = useState({
     id: "",
     name: "",
     price: "",
-    image: "",
+    description: ""
   });
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+  const [editMode, setEditMode] = useState(false);
+  const [addedMenuItems, loading, addItemError, addMenuItem] = useAddMenuItem([isOpen]);
+  const [deletedItem, deleteLoading, deleteError, deleteMenuItem] = useDeleteMenuItem([editMode]);
+  const [updatedItem, updateLoading, updateError, updateMenuItem] = useUpdateMenuItem([editMode]);
+  const saveMenuItem = async () => {
+    if (editMode) {
+      await  updateMenuItem(currentItem?.id, { name: currentItem.name, description: currentItem.description, price: currentItem.price })
+    } else {
+      await addMenuItem({name: currentItem.name, description: currentItem.description, price: currentItem.price});
+    }
+    closeModal();
+  };
+
+  const { menuItems, error } = useGetMenuItems([addedMenuItems, deletedItem, updatedItem]);
 
   const openModal = (item) => {
     if (item) {
       setCurrentItem(item);
       setEditMode(true);
     } else {
-      setCurrentItem({ id: "", name: "", price: "", image: "" });
+      setCurrentItem({ id: "", name: "", price: "", description: "" });
       setEditMode(false);
     }
     onOpen();
@@ -57,24 +70,7 @@ const Menu = () => {
     setCurrentItem((prev) => ({ ...prev, [name]: value }));
   };
 
-  const saveMenuItem = () => {
-    if (editMode) {
-      setMenuItems((prev) =>
-        prev.map((item) => (item.id === currentItem.id ? currentItem : item))
-      );
-    } else {
-      setMenuItems((prev) => [
-        ...prev,
-        { ...currentItem, id: prev.length + 1 },
-      ]);
-    }
-    closeModal();
-  };
-
-  const deleteMenuItem = (id) => {
-    setMenuItems((prev) => prev.filter((item) => item.id !== id));
-  };
-
+  console.log(menuItems)
   return (
     <main className="h-screen overflow-hidden flex-1 p-6 bg-gray-100 grid grid-cols-4 gap-4">
       <div className="col-span-3">
@@ -105,12 +101,13 @@ const Menu = () => {
           style={{ height: "calc(100vh - 70px)" }}
         >
           <div className="grid grid-cols-3 gap-4 mt-6">
-            {menuItems.map((item) => (
+            {menuItems?.map((item) => (
               <div key={item.id} className="relative">
                 <MenuItem
                   name={item.name}
                   price={item.price}
-                  image={item.image}
+                  image={image1}
+                  id={item?.id}
                 />
                 {editMode && (
                   <div className="relative space-y-2 z-50">
@@ -121,6 +118,7 @@ const Menu = () => {
                       size="sm"
                       color="error"
                       onPress={() => deleteMenuItem(item.id)}
+                      isLoading={deleteLoading}
                     >
                       Delete
                     </Button>
@@ -158,8 +156,8 @@ const Menu = () => {
                   fullWidth
                 />
                 <Input
-                  label="Image URL"
-                  name="image"
+                  label="Description"
+                  name="description"
                   value={currentItem.image}
                   onChange={handleChange}
                   fullWidth
@@ -169,7 +167,7 @@ const Menu = () => {
                 <Button color="danger" variant="flat" onPress={onClose}>
                   Close
                 </Button>
-                <Button color="primary" onPress={saveMenuItem}>
+                <Button color="primary" isLoading={loading || updateLoading} onPress={saveMenuItem}>
                   Save
                 </Button>
               </ModalFooter>

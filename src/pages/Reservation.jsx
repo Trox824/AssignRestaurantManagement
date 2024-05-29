@@ -19,28 +19,32 @@ import {
   DropdownItem,
   useDisclosure,
 } from "@nextui-org/react";
+import {useAddReservation, useGetReservations} from "../hooks/reservation/index.jsx";
 
 const initialReservations = [
   {
-    reservation_id: 1,
-    customer_id: 101,
-    number_of_people: 4,
-    reservation_time: "2024-05-21T18:30",
-    reservation_status: "Placed",
+    reservationId: 1,
+    customer: 101,
+    phone: "0912309123",
+    numOfPeople: 4,
+    reservationTime: "2024-05-21T18:30",
+    reservationStatus: "Placed",
   },
   {
-    reservation_id: 2,
-    customer_id: 102,
-    number_of_people: 2,
-    reservation_time: "2024-05-21T19:00",
-    reservation_status: "Confirmed",
+    reservationId: 2,
+    customer: 102,
+    phone: "0912309123",
+    numOfPeople: 2,
+    reservationTime: "2024-05-21T19:00",
+    reservationStatus: "Confirmed",
   },
   {
-    reservation_id: 3,
-    customer_id: 103,
-    number_of_people: 6,
-    reservation_time: "2024-05-21T20:00",
-    reservation_status: "Cancelled",
+    reservationId: 3,
+    customer: 103,
+    phone: "0912309123",
+    numOfPeople: 6,
+    reservationTime: "2024-05-21T20:00",
+    reservationStatus: "Cancelled",
   },
 ];
 
@@ -58,16 +62,19 @@ const getStatusClass = (status) => {
 };
 
 const Reservation = () => {
-  const [reservations, setReservations] = useState(initialReservations);
+  // const [reservations, setReservations] = useState(initialReservations);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [editMode, setEditMode] = useState(false);
   const [currentReservation, setCurrentReservation] = useState({
-    reservation_id: "",
-    customer_id: "",
-    number_of_people: "",
-    reservation_time: "",
-    reservation_status: "Placed",
+    reservationId: "",
+    customer: "",
+    phone: "",
+    numOfPeople: "",
+    reservationTime: "",
+    reservationStatus: "Placed",
   });
+  const [addedReservation, addLoading, addError, addReservation] = useAddReservation(currentReservation);
+  const [reservations, getLoading, getError] = useGetReservations([addedReservation]);
 
   const openModal = (reservation) => {
     if (reservation) {
@@ -75,11 +82,12 @@ const Reservation = () => {
       setEditMode(true);
     } else {
       setCurrentReservation({
-        reservation_id: "",
-        customer_id: "",
-        number_of_people: "",
-        reservation_time: "",
-        reservation_status: "Placed",
+        reservationId: "",
+        customer: "",
+        phone: "",
+        numOfPeople: "",
+        reservationTime: "",
+        reservationStatus: "Placed",
       });
       setEditMode(false);
     }
@@ -92,31 +100,18 @@ const Reservation = () => {
   };
 
   const handleStatusChange = (value) => {
-    setCurrentReservation((prev) => ({ ...prev, reservation_status: value }));
+    setCurrentReservation((prev) => ({ ...prev, reservationStatus: value }));
   };
 
   const saveReservation = () => {
-    if (editMode) {
-      setReservations((prev) =>
-        prev.map((res) =>
-          res.reservation_id === currentReservation.reservation_id
-            ? currentReservation
-            : res
-        )
-      );
-    } else {
-      setReservations((prev) => [
-        ...prev,
-        { ...currentReservation, reservation_id: prev.length + 1 },
-      ]);
-    }
+    addReservation({customer: { name: currentReservation.customer, phone: currentReservation.phone }, numOfPeople: currentReservation.numOfPeople, reservationTime: currentReservation.reservationTime});
     onOpenChange(false);
   };
 
   const deleteReservation = (reservation_id) => {
-    setReservations((prev) =>
-      prev.filter((res) => res.reservation_id !== reservation_id)
-    );
+    // setReservations((prev) =>
+    //   prev.filter((res) => res.reservation_id !== reservation_id)
+    // );
   };
 
   return (
@@ -131,7 +126,8 @@ const Reservation = () => {
         <Table aria-label="Reservation List Table">
           <TableHeader>
             <TableColumn>Reservation ID</TableColumn>
-            <TableColumn>Customer ID</TableColumn>
+            <TableColumn>Customer's Name</TableColumn>
+            <TableColumn>Phone Number</TableColumn>
             <TableColumn>Number of People</TableColumn>
             <TableColumn>Reservation Time</TableColumn>
             <TableColumn>Reservation Status</TableColumn>
@@ -139,25 +135,23 @@ const Reservation = () => {
           </TableHeader>
           <TableBody>
             {reservations.map((reservation) => (
-              <TableRow key={reservation.reservation_id}>
-                <TableCell>{reservation.reservation_id}</TableCell>
-                <TableCell>{reservation.customer_id}</TableCell>
-                <TableCell>{reservation.number_of_people}</TableCell>
-                <TableCell>{reservation.reservation_time}</TableCell>
+              <TableRow key={reservation?.id}>
+                <TableCell>{reservation?.id}</TableCell>
+                <TableCell>{reservation?.customer?.name}</TableCell>
+                <TableCell>{reservation?.customer?.phone}</TableCell>
+                <TableCell>{reservation?.numOfPeople}</TableCell>
+                <TableCell>{reservation?.reservationTime}</TableCell>
                 <TableCell
-                  className={getStatusClass(reservation.reservation_status)}
+                  className={getStatusClass(reservation.reservationStatus)}
                 >
-                  {reservation.reservation_status}
+                  {reservation?.status}
                 </TableCell>
                 <TableCell>
-                  <Button size="sm" onPress={() => openModal(reservation)}>
-                    Edit
-                  </Button>
                   <Button
                     size="sm"
                     color="error"
                     onPress={() =>
-                      deleteReservation(reservation.reservation_id)
+                      deleteReservation(reservation?.id)
                     }
                   >
                     Delete
@@ -177,31 +171,43 @@ const Reservation = () => {
               </ModalHeader>
               <ModalBody>
                 <Input
-                  label="Customer ID"
-                  name="customer_id"
-                  value={currentReservation.customer_id}
+                  label="Customer's Name"
+                  name="customer"
+                  value={currentReservation.customer}
                   onChange={handleChange}
                   fullWidth
+                  required
+                />
+                <Input
+                    label="Phone Number"
+                    name="phone"
+                    value={currentReservation.phone}
+                    onChange={handleChange}
+                    fullWidth
+                    type={'number'}
+                    required
                 />
                 <Input
                   label="Number of People"
-                  name="number_of_people"
-                  value={currentReservation.number_of_people}
+                  name="numOfPeople"
+                  value={currentReservation.numOfPeople}
                   onChange={handleChange}
                   fullWidth
+                  required
                 />
                 <input
                   label="Reservation Time"
-                  name="reservation_time"
+                  name="reservationTime"
                   type="datetime-local"
-                  value={currentReservation.reservation_time}
+                  value={currentReservation.reservationTime}
                   onChange={handleChange}
                   fullWidth
+                  required
                 />
                 <Dropdown>
                   <DropdownTrigger>
                     <Button flat>
-                      {currentReservation.reservation_status}
+                      {currentReservation.reservationStatus}
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu
@@ -209,7 +215,7 @@ const Reservation = () => {
                     color="secondary"
                     disallowEmptySelection
                     selectionMode="single"
-                    selectedKeys={[currentReservation.reservation_status]}
+                    selectedKeys={[currentReservation.reservationStatus]}
                     onSelectionChange={(keys) =>
                       handleStatusChange([...keys][0])
                     }
@@ -224,7 +230,7 @@ const Reservation = () => {
                 <Button color="danger" variant="flat" onPress={onClose}>
                   Close
                 </Button>
-                <Button color="primary" onPress={saveReservation}>
+                <Button color="primary" isLoading={addLoading} onPress={saveReservation}>
                   Save
                 </Button>
               </ModalFooter>

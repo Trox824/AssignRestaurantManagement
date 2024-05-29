@@ -9,9 +9,12 @@ import {
 } from "@nextui-org/react";
 import { useOrderContext } from "./OrderContext";
 import PaymentButton from "./PaymentButton";
+import {useGetOrder} from "../hooks/history/index.jsx";
+import {useProcessPayment} from "../hooks/payment/index.jsx";
 export default function OrderHistoryTable() {
-  const { orderHistory } = useOrderContext();
-
+  const {  orders } = useOrderContext();
+  const [payment, payLoading, paymentError, processPayment] = useProcessPayment();
+  const [orderHistory, loading, error ] = useGetOrder({ orderStatus: "UNPAID", deps: [orders, payment] });
   return (
     <Table
       isStriped
@@ -29,18 +32,18 @@ export default function OrderHistoryTable() {
         <TableColumn>Total</TableColumn>
         <TableColumn>View Invoice</TableColumn>
       </TableHeader>
-      <TableBody items={orderHistory}>
+      <TableBody isLoading={loading} items={orderHistory}>
         {(item) => (
-          <TableRow key={item.id}>
-            <TableCell>{item.id}</TableCell>
-            <TableCell>{item.time}</TableCell>
+          <TableRow key={item?.id}>
+            <TableCell>{item?.id}</TableCell>
+            <TableCell>{item?.date}</TableCell>
             <TableCell>
-              <PaymentButton />
+              <PaymentButton orderId={item?.id} processPayment={processPayment} />
             </TableCell>
-            <TableCell>{item.total}</TableCell>
+            <TableCell>{item?.totalPrice}</TableCell>
             <TableCell>
               <a href="#" className="text-blue-500">
-                {item.viewInvoice}
+                View Invoice
               </a>
             </TableCell>
           </TableRow>

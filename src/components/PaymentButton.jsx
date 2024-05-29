@@ -8,34 +8,28 @@ import {
 } from "@nextui-org/react";
 import { RadioGroup, Radio } from "@nextui-org/radio";
 
-export default function PaymentButton() {
+export default function PaymentButton( { processPayment, orderId } ) {
   const [paymentMethod, setPaymentMethod] = useState("Card");
-  const [amount, setAmount] = useState("");
+  const [receivedAmount, setReceivedAmount] = useState("");
   const [error, setError] = useState("");
+  // const [open, setOpen] = useState()
 
   const handlePaymentMethodChange = (value) => {
     setPaymentMethod(value);
-    setAmount("");
     setError("");
   };
 
   const handleProcessPayment = () => {
-    if (paymentMethod === "Cash" && !amount) {
-      setError("Amount is required for cash payments.");
+    if (paymentMethod === "Cash" && !receivedAmount) {
+      setError("Received amount is required");
       return;
     }
     setError("");
-    // Process the payment
-    console.log(
-      "Payment processed with method:",
-      paymentMethod,
-      "Amount:",
-      amount
-    );
+    processPayment({ orderId: orderId, receivedAmount: receivedAmount, paymentMethod: "CASH" })
   };
 
   return (
-    <Popover placement="bottom" showArrow offset={10}>
+    <Popover placement="bottom" showArrow offset={10} >
       <PopoverTrigger>
         <a href="#" className="text-orange-500">
           Pay
@@ -55,14 +49,17 @@ export default function PaymentButton() {
                 <Radio value="Cash">Cash</Radio>
               </RadioGroup>
               {paymentMethod === "Cash" && (
-                <Input
-                  type="text"
-                  label="Amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  isInvalid={!!error}
-                  errorMessage={error}
-                />
+                  <div>
+                    <Input
+                        type="text"
+                        label="Received Amount"
+                        value={receivedAmount}
+                        onChange={(e) => setReceivedAmount(e.target.value)}
+                        isInvalid={!!error}
+                        errorMessage={error}
+                    />
+                  </div>
+
               )}
             </div>
             <Button

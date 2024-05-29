@@ -8,7 +8,9 @@ import { useOrderContext } from "./OrderContext";
 const OrderDetails = ({ onPlaceOrder }) => {
   const { orders, removeFromOrder, placeOrder } = useOrderContext();
   const [tableNumber, setTableNumber] = useState("");
+  const [customer, setCustomer] = useState({ name: "", phone: "" })
   const [selectedOrderType, setSelectedOrderType] = useState("");
+  const [instruction, setInstruction] = useState("");
   const [error, setError] = useState("");
 
   const subtotal = orders.reduce(
@@ -19,6 +21,7 @@ const OrderDetails = ({ onPlaceOrder }) => {
   const total = subtotal + tax;
 
   const handlePlaceOrder = () => {
+      console.log(orders)
     if (!tableNumber) {
       setError("Table number is required.");
       return;
@@ -31,8 +34,16 @@ const OrderDetails = ({ onPlaceOrder }) => {
       setError("At least one order item is required.");
       return;
     }
+    if(!customer?.name) {
+        setError("Customer's name is required.");
+        return;
+    }
+      if(!customer?.phone) {
+          setError("Customer's phone number is required.");
+          return;
+      }
     setError("");
-    placeOrder();
+    placeOrder({customer, orderType: selectedOrderType, specialInstruction: instruction, tableNumber: tableNumber, });
     onPlaceOrder();
   };
 
@@ -49,6 +60,33 @@ const OrderDetails = ({ onPlaceOrder }) => {
         isInvalid={!!error && !tableNumber}
         errorMessage={error && !tableNumber ? error : ""}
       />
+        <Input
+            className="mb-3"
+            type="text"
+            label="Customer's Name"
+            value={customer?.name}
+            onChange={(e) => setCustomer({...customer, name: e.target.value})}
+            isInvalid={!!error && !customer?.name}
+            errorMessage={error && !customer?.name ? error : ""}
+        />
+        <Input
+            className="mb-3"
+            type="text"
+            label="Customer's Phone Number"
+            value={customer?.phone}
+            onChange={(e) => setCustomer({...customer, phone: e.target.value})}
+            isInvalid={!!error && !customer?.phone}
+            errorMessage={error && !customer?.phone ? error : ""}
+        />
+        <Input
+            className="mb-3"
+            type="text"
+            label="Special Instruction"
+            value={instruction}
+            onChange={(e) => setInstruction(e.target.value)}
+            isInvalid={!!error && !instruction}
+            errorMessage={error && !instruction ? error : ""}
+        />
       <OrderDropdown
         selectedOrderType={selectedOrderType}
         setSelectedOrderType={setSelectedOrderType}
