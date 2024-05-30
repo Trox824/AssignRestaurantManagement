@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Popover,
   PopoverTrigger,
@@ -8,28 +8,68 @@ import {
 } from "@nextui-org/react";
 import { RadioGroup, Radio } from "@nextui-org/radio";
 
-export default function PaymentButton( { processPayment, orderId } ) {
-  const [paymentMethod, setPaymentMethod] = useState("Card");
+export default function PaymentButton({
+  processPayment,
+  orderId,
+  totalAmountDue,
+}) {
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
   const [receivedAmount, setReceivedAmount] = useState("");
   const [error, setError] = useState("");
-  // const [open, setOpen] = useState()
+  const [change, setChange] = useState(null);
 
   const handlePaymentMethodChange = (value) => {
     setPaymentMethod(value);
+    setReceivedAmount("");
+    setError("");
+    setChange(null);
+  };
+
+  const handleReceivedAmountChange = (e) => {
+    const value = e.target.value;
+    setReceivedAmount(value);
+
+    const receivedAmountNum = parseFloat(value);
+    if (!value || isNaN(receivedAmountNum)) {
+      setError("Received amount is required and must be a valid number.");
+      setChange(null);
+      return;
+    }
+    if (receivedAmountNum < totalAmountDue) {
+      setError("Received amount cannot be less than the total amount due.");
+      setChange(null);
+      return;
+    }
+    const calculatedChange = receivedAmountNum - totalAmountDue;
+    setChange(calculatedChange);
     setError("");
   };
 
   const handleProcessPayment = () => {
-    if (paymentMethod === "Cash" && !receivedAmount) {
-      setError("Received amount is required");
-      return;
+    const receivedAmountNum = parseFloat(receivedAmount);
+    if (paymentMethod === "Cash") {
+      if (
+        !receivedAmount ||
+        isNaN(receivedAmountNum) ||
+        receivedAmountNum < totalAmountDue
+      ) {
+        setError(
+          "Received amount is required and must be a valid number greater than the total amount due."
+        );
+        return;
+      }
     }
+
     setError("");
-    processPayment({ orderId: orderId, receivedAmount: receivedAmount, paymentMethod: "CASH" })
+    processPayment({
+      orderId: orderId,
+      receivedAmount: receivedAmountNum,
+      paymentMethod: paymentMethod.toUpperCase(),
+    });
   };
 
   return (
-    <Popover placement="bottom" showArrow offset={10} >
+    <Popover placement="bottom" showArrow offset={10}>
       <PopoverTrigger>
         <a href="#" className="text-orange-500">
           Pay
@@ -42,24 +82,30 @@ export default function PaymentButton( { processPayment, orderId } ) {
               <RadioGroup
                 label="Select Payment Method"
                 color="secondary"
-                defaultValue="Card"
+                defaultValue="Cash"
                 onValueChange={handlePaymentMethodChange}
               >
-                <Radio value="Card">Card</Radio>
+                <Radio isDisabled value="Card">
+                  Card
+                </Radio>
                 <Radio value="Cash">Cash</Radio>
               </RadioGroup>
               {paymentMethod === "Cash" && (
-                  <div>
-                    <Input
-                        type="text"
-                        label="Received Amount"
-                        value={receivedAmount}
-                        onChange={(e) => setReceivedAmount(e.target.value)}
-                        isInvalid={!!error}
-                        errorMessage={error}
-                    />
-                  </div>
-
+                <div>
+                  <Input
+                    type="text"
+                    label="Received Amount"
+                    value={receivedAmount}
+                    onChange={handleReceivedAmountChange}
+                    isInvalid={!!error}
+                    errorMessage={error}
+                  />
+                  {change !== null && (
+                    <div className="mt-2">
+                      <span>Change: ${change.toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             <Button

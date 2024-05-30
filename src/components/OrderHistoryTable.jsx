@@ -9,12 +9,16 @@ import {
 } from "@nextui-org/react";
 import { useOrderContext } from "./OrderContext";
 import PaymentButton from "./PaymentButton";
-import {useGetOrder} from "../hooks/history/index.jsx";
-import {useProcessPayment} from "../hooks/payment/index.jsx";
+import { useGetOrder } from "../hooks/history/index.jsx";
+import { useProcessPayment } from "../hooks/payment/index.jsx";
 export default function OrderHistoryTable() {
-  const {  orders } = useOrderContext();
-  const [payment, payLoading, paymentError, processPayment] = useProcessPayment();
-  const [orderHistory, loading, error ] = useGetOrder({ orderStatus: "UNPAID", deps: [orders, payment] });
+  const { orders } = useOrderContext();
+  const [payment, payLoading, paymentError, processPayment] =
+    useProcessPayment();
+  const [orderHistory, loading, error] = useGetOrder({
+    orderStatus: "UNPAID",
+    deps: [orders, payment],
+  });
   return (
     <Table
       isStriped
@@ -38,7 +42,11 @@ export default function OrderHistoryTable() {
             <TableCell>{item?.id}</TableCell>
             <TableCell>{item?.date}</TableCell>
             <TableCell>
-              <PaymentButton orderId={item?.id} processPayment={processPayment} />
+              <PaymentButton
+                orderId={item?.id}
+                processPayment={processPayment}
+                totalAmountDue={item?.totalPrice}
+              />
             </TableCell>
             <TableCell>{item?.totalPrice}</TableCell>
             <TableCell>
